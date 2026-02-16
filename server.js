@@ -40,3 +40,31 @@ db.connect((err) => {
       db.query(createTableQuery, (err) => {
         if (err) throw err;
         console.log('Table created or already exists');
+
+        const checkDataQuery = 'SELECT COUNT(*) AS count FROM responses';
+        db.query(checkDataQuery, (err, results) => {
+          if (err) throw err;
+          if (results[0].count === 0) {
+            const insertData = [
+              ['Hej!', 'Hej på dig! Jag heter Chatbot. Hur är läget?'],
+              ['Jag mår bra.', 'Trevligt att höra! Mina egna kretsar är också fullt funktionella.'],
+              ['Vad kan du göra?', 'Jag kan svara på frågor baserat på min databas. Fråga mig något!'],
+              ['Hur mår du?', 'Jag mår alltid bra som en dator! Vad kan jag hjälpa dig med?'],
+              ['Vad är klockan?', 'Jag har ingen klocka, men det är dags att prata!'],
+              ['Berätta en vits.', 'Varför gick datorn till läkaren? För att den hade virus!'],
+              ['Vad är ditt namn?', 'Mitt namn är Chatbot. Vad heter du?'],
+              ['Tack!', 'Varsågod! Kom tillbaka snart.'],
+              ['Hejdå!', 'Hejdå! Ha en bra dag!'],
+              ['Hjälp!', 'Jag kan hjälpa dig med enkla frågor. Vad behöver du hjälp med?']
+            ];
+            const insertQuery = 'INSERT INTO responses (input, output) VALUES ?';
+            db.query(insertQuery, [insertData], (err) => {
+              if (err) throw err;
+              console.log('Sample data inserted');
+            });
+          }
+        });
+      });
+    });
+  });
+});
