@@ -68,3 +68,52 @@ db.connect((err) => {
     });
   });
 });
+
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/index.html');
+});
+
+app.post('/', (req, res) => {
+  const userInput = req.body.userInput.trim();
+
+
+  const normalize = (s) => {
+    if (!s) return '';
+    return s
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u002F\u003A-\u0040\u005B-\u0060\u007B-\u007F]/g, ' ') // remove most punctuation
+      .replace(/[\u0300-\u036f]/g, '') // remove diacritics
+      .replace(/[^a-z0-9åäö\s]/g, '') // keep Swedish letters, numbers and spaces
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
+
+  const normUser = normalize(userInput);
+
+  const query = 'SELECT input, output FROM responses';
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Error querying database:', err);
+      res.redirect('/?response=Fel vid sökning i databasen.');
+      return;
+    }
+
+    let response;
+
+    const match = results.find(row => normalize(row.input) === normUser);
+    if (match) {
+      response = match.output;
+    } else {
+      response = 'Jag förstår inte det där. Försök något annat!';
+    }
+
+    res.redirect(`/?input=${encodeURIComponent(userInput)}&response=${encodeURIComponent(response)}`);
+  });
+});
+
+// Start server
+const PORT = 3003;
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
