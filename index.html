@@ -2,27 +2,79 @@
 <html lang="sv">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chatbot</title>
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-  <div class="container">
-    <h1>Chatbot</h1>
-    <form action="/" method="POST">
-      <label for="userInput">Skriv ditt meddelande:</label>
-      <input type="text" id="userInput" name="userInput" required>
+  <div class="chat-container">
+    <div class="chat-header">
+      <h1>Din digitala kompis</h1>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+      <div class="message bot-message">
+        <div class="message-content">Hej! Jag är din chatbot. Vad kan jag hjälpa dig med idag?</div>
+      </div>
+    </div>
+    <form action="/" method="POST" class="chat-input-area">
+      <input type="text" id="userInput" name="userInput" placeholder="Skriv ditt meddelande..." required>
       <button type="submit">Skicka</button>
     </form>
-    <div id="response">
-      
-    </div>
   </div>
+
   <script>
     const urlParams = new URLSearchParams(window.location.search);
-    const response = urlParams.get('response');
-    if (response) {
-      document.getElementById('response').innerHTML = '<p><strong>Svar:</strong> ' + response + '</p>';
+    const userInput = urlParams.get('input');
+    const botResponse = urlParams.get('response');
+    const chatMessages = document.getElementById('chatMessages');
+    
+    let chatHistory = JSON.parse(localStorage.getItem('chatHistory') || '[]');
+    
+    function addMessage(text, isUser) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message ' + (isUser ? 'user-message' : 'bot-message');
+      messageDiv.innerHTML = '<div class="message-content">' + escapeHtml(text) + '</div>';
+      chatMessages.appendChild(messageDiv);
     }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    chatHistory.forEach(msg => {
+      addMessage(msg.text, msg.isUser);
+    });
+    
+
+    if (userInput && botResponse) {
+      chatHistory.push({ text: userInput, isUser: true });
+      addMessage(userInput, true);
+      
+      chatHistory.push({ text: botResponse, isUser: false });
+      addMessage(botResponse, false);
+      
+      localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+      
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    document.querySelector('.chat-header').addEventListener('click', function() {
+      if (confirm('Vill du ta bort chatthistoriken?')) {
+        localStorage.removeItem('chatHistory');
+        chatHistory = [];
+        chatMessages.innerHTML = '';
+
+        const welcomeMsg = document.createElement('div');
+        welcomeMsg.className = 'message bot-message';
+        welcomeMsg.innerHTML = '<div class="message-content">Hej! Jag är din chatbot. Vad kan jag hjälpa dig med idag?</div>';
+        chatMessages.appendChild(welcomeMsg);
+      }
+    });
   </script>
 </body>
 </html>
